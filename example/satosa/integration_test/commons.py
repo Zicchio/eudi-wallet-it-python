@@ -32,7 +32,7 @@ from pyeudiw.tests.federation.base import (
 )
 from pyeudiw.tools.utils import iat_now, exp_from_now
 
-from saml2_sp import IDP_BASEURL
+from saml2_sp import IDP_BASEURL, saml2_request
 from settings import (
     CONFIG_DB,
     RP_EID,
@@ -63,6 +63,8 @@ ISSUER_CONF = {
 ISSUER_PRIVATE_JWK = JWK(leaf_cred_jwk.serialize(private=True))
 WALLET_PRIVATE_JWK = JWK(leaf_wallet_jwk.serialize(private=True))
 WALLET_PUBLIC_JWK = JWK(leaf_wallet_jwk.serialize())
+
+INITIATING_SAML_REQUEST_URI = f"{saml2_request['headers'][0][1]}&idp_hinting=wallet"
 
 
 def setup_test_db_engine() -> DBEngine:

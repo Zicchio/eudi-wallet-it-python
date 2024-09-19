@@ -7,6 +7,7 @@ import re
 from pyeudiw.jwt.utils import decode_jwt_payload
 
 from commons import (
+    INITIATING_SAML_REQUEST_URI,
     ISSUER_CONF,
     apply_trust_settings,
     create_authorize_response,
@@ -15,7 +16,6 @@ from commons import (
     extract_saml_attributes,
     setup_test_db_engine,
 )
-from saml2_sp import saml2_request
 from settings import TIMEOUT_S
 
 db_engine_inst = setup_test_db_engine()
@@ -61,10 +61,9 @@ def _extract_status_uri(bs: BeautifulSoup) -> str:
 http_user_agent = requests.Session()
 wallet_user_agent = requests.Session()
 
-initiating_saml_request_uri = f"{saml2_request['headers'][0][1]}&idp_hinting=wallet"
 request_uri = ""
 authn_response = http_user_agent.get(
-    url=initiating_saml_request_uri,
+    url=INITIATING_SAML_REQUEST_URI,
     verify=False,
     headers=headers_browser,
     timeout=TIMEOUT_S
