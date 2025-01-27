@@ -293,7 +293,7 @@ class OpenID4VPBackend(OpenID4VPBackendInterface, BackendTrust):
 
     def status_endpoint(self, context: Context) -> JsonResponse:
 
-        self._log_function_debug("status_endpoint", context)
+        # self._log_function_debug("status_endpoint", context)
 
         session_id = context.state["SESSION_ID"]
         _err_msg = ""
