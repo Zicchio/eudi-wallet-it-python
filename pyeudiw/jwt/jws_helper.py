@@ -247,12 +247,11 @@ class JWSHelper(JWHelperInterface):
         if "kid" in header:
             if (verifying_key := find_jwk_by_kid(available_keys, header["kid"])):
                 return verifying_key
-
         # case 2: the token is self contained, and the verification key matches one of the key in the whitelist
         if (self_contained_claims_key_pair := find_self_contained_key(header)):
             # check if the self contained key matches a trusted jwk
             used_claims, candidate_key = self_contained_claims_key_pair
-            if hasattr(candidate_key, "thumbprint"):
+            if candidate_key and hasattr(candidate_key, "thumbprint"):
                 if (verifying_key := find_jwk_by_thumbprint(available_keys, candidate_key.thumbprint)):
                     return verifying_key
                 else:
