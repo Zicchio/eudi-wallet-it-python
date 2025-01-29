@@ -54,6 +54,7 @@ class OpenID4VPBackend(OpenID4VPBackendInterface, BackendTrust):
         self.config = config
 
         self.client_id = f"{base_url}/{name}"
+        self.openid4vp_client_id = self.config["authorization"].get("client_id", self.client_id)
         self.config['metadata']['client_id'] = self.client_id
 
         self.config['metadata']['response_uris_supported'] = []
@@ -211,7 +212,7 @@ class OpenID4VPBackend(OpenID4VPBackendInterface, BackendTrust):
 
         # PAR
         payload = {
-            'client_id': self.client_id,
+            'client_id': self.openid4vp_client_id,
             'request_uri': f"{self.absolute_request_url}?id={state}",
         }
 

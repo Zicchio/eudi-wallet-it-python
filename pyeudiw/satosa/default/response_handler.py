@@ -10,9 +10,10 @@ from satosa.context import Context
 from satosa.internal import AuthenticationInformation, InternalData
 from satosa.response import Redirect
 
-from pyeudiw.openid4vp.authorization_response import AuthorizeResponsePayload, DirectPostJwtJweParser, DirectPostParser, DirectPostJwtJweParser, detect_response_mode
+from pyeudiw.jwt.jwe_helper import JWEHelper
+from pyeudiw.openid4vp.authorization_response import AuthorizeResponsePayload, DirectPostJwtJweParser, DirectPostParser, detect_response_mode
 from pyeudiw.openid4vp.exceptions import AuthRespParsingException, AuthRespValidationException, InvalidVPKeyBinding, InvalidVPToken, KIDNotFound
-from pyeudiw.openid4vp.interface import VpTokenParser, VpTokenVerifier, AuthorizationResponseParser
+from pyeudiw.openid4vp.interface import VpTokenParser, VpTokenVerifier
 from pyeudiw.openid4vp.schemas.flow import RemoteFlowType
 from pyeudiw.openid4vp.schemas.response import ResponseMode
 from pyeudiw.openid4vp.vp import Vp
@@ -26,8 +27,6 @@ from pyeudiw.satosa.utils.trust import BackendTrust
 from pyeudiw.sd_jwt.schema import VerifierChallenge
 from pyeudiw.storage.exceptions import StorageWriteError
 from pyeudiw.tools.utils import iat_now
-from pyeudiw.tools.jwk_handling import find_vp_token_key
-from pyeudiw.trust.exceptions import NoCriptographicMaterial
 
 
 class ResponseHandler(ResponseHandlerInterface, BackendTrust):
@@ -145,9 +144,9 @@ class ResponseHandler(ResponseHandlerInterface, BackendTrust):
         try:
             authz_payload: AuthorizeResponsePayload = self._parse_authorization_response(context)
         except AuthRespParsingException as e400:
-            self._handle_400(context, e400.args[0], e400.args[1])
+            return self._handle_400(context, e400.args[0], e400.args[1])
         except AuthRespValidationException as e401:
-            self._handle_401(context, "invalid authentication method: token might be invalid or expired", e401)
+            return self._handle_401(context, "invalid authentication method: token might be invalid or expired", e401)
         self._log_debug(context, f"response URI endpoint response with payload {authz_payload}")
 
         request_session: dict = {}
@@ -308,7 +307,8 @@ class ResponseHandler(ResponseHandlerInterface, BackendTrust):
                 parser = DirectPostParser()
                 return parser.parse_and_validate(context)
             case ResponseMode.direct_post_jwt:
-                parser = DirectPostJwtJweParser(self.config["metadata_jwks"])
+                jwe_decrypter = JWEHelper(self.config["metadata_jwks"])
+                parser = DirectPostJwtJweParser(jwe_decrypter)
                 return parser.parse_and_validate(context)
             case _:
                 raise AuthRespParsingException(
@@ -324,4 +324,4 @@ class ResponseHandler(ResponseHandlerInterface, BackendTrust):
         return (token_processor, deepcopy(token_processor))
 
     def _get_verifier_challenge(self, session_data: dict) -> VerifierChallenge:
-        return {"aud": self.client_id, "nonce": session_data["nonce"]}
+        return {"aud": self.openid4vp_client_id, "nonce": session_data["nonce"]}
