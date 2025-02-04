@@ -25,12 +25,15 @@ DIGEST_ALG_KEY = sd_jwtcommon.DIGEST_ALG_KEY
 FORMAT_SEPARATOR = SDJWTCommon.COMBINED_SERIALIZATION_FORMAT_SEPARATOR
 SD_DIGESTS_KEY = sd_jwtcommon.SD_DIGESTS_KEY
 SD_LIST_PREFIX = sd_jwtcommon.SD_LIST_PREFIX
+TOLERATED_CLOCK_SKEW_S = 60
+
 
 SUPPORTED_SD_ALG_FN: dict[str, Callable[[str], str]] = {
     "sha-256": lambda s: base64_urlencode(sha256(s.encode("ascii")).digest())
 }
 
 logger = logging.getLogger(__name__)
+
 
 class SdJwt:
     """
@@ -137,7 +140,7 @@ def _verify_iat(payload: dict) -> None:
     if not isinstance(iat, int):
         raise ValueError("missing or invalid parameter [iat] in kbjwt")
     now = iat_now()
-    if iat > now:
+    if iat - TOLERATED_CLOCK_SKEW_S > now:
         raise InvalidKeyBinding("invalid parameter [iat] in kbjwt: issuance after present time")
     return
 
