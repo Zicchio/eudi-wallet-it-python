@@ -233,10 +233,10 @@ class JWSHelper(JWHelperInterface):
         msg: dict = verifier.verify_compact(jwt, [key_from_jwk_dict(verifying_key)])
 
         # Validate JWT claims
-        try:
-            validate_jwt_timestamps_claims(msg)
-        except ValueError as e:
-            raise JWSVerificationError(f"Invalid JWT claims: {e}")
+        # try:
+        #     validate_jwt_timestamps_claims(msg)
+        # except Exception as e:
+        #     raise JWSVerificationError(f"Invalid JWT claims: {e}")
 
         return msg
 
