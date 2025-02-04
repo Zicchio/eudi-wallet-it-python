@@ -113,7 +113,7 @@ class _DirectTrustJwkHandler(TrustHandlerInterface, BaseLogger):
             resp = get_http_url([endpoint], self.httpc_params, http_async=self.http_async_calls)[0]
         if (not resp) or (resp.status_code != 200):
             raise InvalidJwkMetadataException(
-                f"failed to fetch valid jwk metadata: obtained {resp}")
+                f"failed to fetch valid jwk metadata (searched in {endpoint}): obtained {resp}")
         return resp.json()
 
     def _get_jwks_by_reference(self, jwks_reference_uri: str) -> dict:

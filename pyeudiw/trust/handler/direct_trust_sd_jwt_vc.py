@@ -1,6 +1,8 @@
 import os
+from urllib.parse import urlparse
 
 from pyeudiw.trust.handler._direct_trust_jwk import _DirectTrustJwkHandler
+from pyeudiw.trust.handler.exception import InvalidJwkMetadataException
 from pyeudiw.trust.model.trust_source import TrustSourceData
 from pyeudiw.tools.utils import cacheable_get_http_url, get_http_url
 
@@ -46,6 +48,38 @@ class DirectTrustSdJwtVc(_DirectTrustJwkHandler):
         )
         self.metadata_endpoint = metadata_endpoint
 
+    def _get_jwk_metadata(self, issuer_id: str) -> dict:
+        error_list: list[Exception] = []
+        if not self.jwk_endpoint:
+            return {}
+        # first look for the correct endpoint
+        try:
+            endpoint = build_jwk_issuer_endpoint_ietf_way(issuer_id, self.jwk_endpoint)
+            if self.cache_ttl:
+                resp = cacheable_get_http_url(
+                    self.cache_ttl, endpoint, self.httpc_params, http_async=self.http_async_calls)
+            else:
+                resp = get_http_url([endpoint], self.httpc_params, http_async=self.http_async_calls)[0]
+            if (not resp) or (resp.status_code != 200):
+                raise InvalidJwkMetadataException(
+                    f"failed to fetch valid jwk metadata (searched in {endpoint}): obtained {resp}")
+            return resp.json()
+        except Exception as e_ietf:
+            error_list.append(e_ietf)
+
+        # then, look for the wrong endpoint
+        try:
+            endpoint = build_jwk_issuer_endpoint_openid_way(issuer_id, self.jwk_endpoint)
+            resp = get_http_url([endpoint], self.httpc_params, http_async=self.http_async_calls)[0]
+            if (not resp) or (resp.status_code != 200):
+                raise InvalidJwkMetadataException(
+                    f"failed to fetch valid jwk metadata (searched in {endpoint}): obtained {resp}")
+            return resp.json()
+        except Exception as e_openid:
+            error_list.append(e_openid)
+
+        raise InvalidJwkMetadataException(f"failed to find jwk metadata: obtained exception: {error_list}")
+
     def get_metadata(self, issuer: str, trust_source: TrustSourceData) -> TrustSourceData:
         """
         Fetches the public metadata of an issuer by interrogating a given
@@ -64,4 +98,18 @@ class DirectTrustSdJwtVc(_DirectTrustJwkHandler):
 
 
 def build_metadata_issuer_endpoint(issuer_id: str, endpoint_component: str) -> str:
+    return issuer_id.rstrip('/') + '/' + endpoint_component.lstrip('/')
+
+
+def build_jwk_issuer_endpoint_ietf_way(issuer_id: str, endpoint_component: str) -> str:
+    if not endpoint_component:
+        return issuer_id
+    baseurl = urlparse(issuer_id)
+    full_endpoint_path = '/' + endpoint_component.strip('/') + baseurl.path
+    return baseurl._replace(path=full_endpoint_path).geturl()
+
+
+def build_jwk_issuer_endpoint_openid_way(issuer_id: str, endpoint_component: str) -> str:
+    if not endpoint_component:
+        return issuer_id
     return issuer_id.rstrip('/') + '/' + endpoint_component.lstrip('/')
