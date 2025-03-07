@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import json
+from typing import TypeVar
 import satosa.context
 
 from pyeudiw.jwk.exceptions import KidNotFoundError
@@ -15,6 +16,22 @@ import cryptojwt.jwe.exception
 from pyeudiw.openid4vp.exceptions import AuthRespParsingException, AuthRespValidationException
 from pyeudiw.openid4vp.interface import AuthorizationResponseParser
 from pyeudiw.openid4vp.schemas.response import AuthorizeResponseDirectPostJwt, AuthorizeResponsePayload, ResponseMode
+
+
+_S = TypeVar('_S', str, list[str])
+
+
+def normalize_json_string(s: _S) -> _S:
+    """
+    Normalize s from to string (or list of string) or JSON String (or
+    list JSON String) to simply string (or list of string).
+    For example, this would map a jwt token "ey...Ui5" to ey...Ui5
+    (note the missing quote symbol).
+    """
+    if isinstance(s, str):
+        return s.strip('"')
+    if isinstance(s, list):
+        return [v.strip('"') for v in s]
 
 
 def detect_response_mode(context: satosa.context.Context) -> ResponseMode:
@@ -60,7 +77,16 @@ class DirectPostParser(AuthorizationResponseParser):
 
         resp_data: dict = context.request
         try:
-            return AuthorizeResponsePayload(**resp_data)
+            d = {}
+            if (vp_token := resp_data.get("vp_token", None)):
+                # vp_token should be a Json string but caller might not be compliant and use string instead: be flexible
+                vp_token = normalize_json_string(vp_token)
+                d["vp_token"] = vp_token
+            if (state := resp_data.get("state", None)):
+                d["state"] = state
+            if (presentation_submission := resp_data["presentation_submission"]):
+                d["presentation_submission"] = presentation_submission
+            return AuthorizeResponsePayload(**d)
         except Exception as e:
             raise AuthRespParsingException("invalid data in direct_post request body", e)
 
