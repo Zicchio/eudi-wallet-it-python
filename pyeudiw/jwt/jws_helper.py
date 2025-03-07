@@ -255,9 +255,9 @@ class JWSHelper(JWHelperInterface):
                 if (verifying_key := find_jwk_by_thumbprint(available_keys, candidate_key.thumbprint)):
                     return verifying_key
                 else:
-                    logger.error(f"Candidate key {candidate_key} does not have a thumbprint attribute.")
-                    raise ValueError("Invalid key: missing thumbprint.")
-
+                    logger.debug(f"unable to match self contained key {candidate_key} with a trusted keys; moving to alternative strategy")
+            else:
+                raise ValueError("Invalid verificaation key state: either key is missing or thumbprint could not be evaluated")
 
         # case 3: if only one key and there is no header claim that can identitfy any key, than that MUST
         # be the only valid CANDIDATE key for signature verification

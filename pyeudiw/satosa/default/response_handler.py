@@ -172,6 +172,7 @@ class ResponseHandler(ResponseHandlerInterface, BackendTrust):
             try:
                 token_parser, token_verifier = self._vp_verifier_factory(authz_payload.presentation_submission, vp_token, request_session)
             except ValueError as e:
+                self._log_error(context, f"failed to build token verifier: {e}")
                 return self._handle_400(context, f"VP parsing error: {e}")
             
             token_issuer = token_parser.get_issuer_name()
@@ -179,11 +180,13 @@ class ResponseHandler(ResponseHandlerInterface, BackendTrust):
             try:
                 token_verifier.verify_signature(whitelisted_keys)
             except Exception as e:
+                self._log_error(context, f"failed to to verify token signature: {e}")
                 return self._handle_400(context, f"VP parsing error: {e}")
             
             try:
                 token_verifier.verify_challenge()
             except InvalidVPKeyBinding as e:
+                self._log_error(context, f"failed to to verify token challenge: {e}")
                 return self._handle_400(context, f"VP parsing error: {e}")
             
             claims = token_parser.get_credentials()
