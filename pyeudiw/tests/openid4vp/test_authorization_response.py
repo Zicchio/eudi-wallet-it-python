@@ -54,7 +54,7 @@ def test_direct_post_parser_good_case():
 
     # case 1: vp_token is a json string
     ctx.request = {
-        "vp_token": vp_token,
+        "vp_token": f'"{vp_token}"',
         "state": state,
         "presentation_submission": presentation_submission
     }
