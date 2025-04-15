@@ -30,10 +30,11 @@ class RequestHandler(RequestHandlerInterface, BaseLogger):
                 e400
             )
         
-        try:
-            metadata = self.trust_evaluator.get_metadata(self.client_id)
-        except Exception:
-            metadata = None
+        # try:
+        #     metadata = self.trust_evaluator.get_metadata(self.client_id)
+        # except Exception:
+        #     metadata = None
+        metadata = None
 
         data = build_authorization_request_claims(
             self.client_id,
@@ -67,7 +68,7 @@ class RequestHandler(RequestHandlerInterface, BaseLogger):
         _protected_jwt_headers = {
             "typ": RequestHandler._REQUEST_OBJECT_TYP,
         }
-
+    
         # load all the trust handlers request jwt header parameters, if any
         # trust_params = self.trust_evaluator.get_jwt_header_trust_parameters(issuer=self.client_id)
         trust_params = {}
@@ -99,12 +100,14 @@ class RequestHandler(RequestHandlerInterface, BaseLogger):
                 data,
                 protected=_protected_jwt_headers,
             )
-            return Response(
+            resp = Response(
                 message=request_object_jwt,
                 status="200",
                 content=RequestHandler._RESP_CONTENT_TYPE,
             )
-        except JWSSigningError as e500:
+            self._log_debug(context, f"responding with request object {request_object_jwt}")
+            return resp
+        except Exception as e500:
             return self._handle_500(
                 context,
                 "internal error: error while processing the request object",
