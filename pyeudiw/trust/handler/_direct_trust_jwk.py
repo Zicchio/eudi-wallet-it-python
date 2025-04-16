@@ -56,6 +56,7 @@ class _DirectTrustJwkHandler(TrustHandlerInterface, BaseLogger):
             [JWK(key=key) for key in self.jwks]
         except Exception as e:
             raise ValueError("invalid argument: dictionary is not a jwk", e)
+        self._trust_type_name = "_direct_trust_jwk"
 
     def _build_issuing_public_signing_jwks(self) -> list[dict]:
         signing_keys = [key for key in self.jwks if key.get("use", "") != "enc"]
@@ -208,7 +209,7 @@ class _DirectTrustJwkHandler(TrustHandlerInterface, BaseLogger):
                 )
 
             trust_source.add_trust_param(
-                "direct_trust_sd_jwt_vc",
+                self._trust_type_name,
                 TrustEvaluationType(
                     attribute_name="jwks",
                     jwks=[JWK(key=jwk).as_dict() for jwk in jwk_l],

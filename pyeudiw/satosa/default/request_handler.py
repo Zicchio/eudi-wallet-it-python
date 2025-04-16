@@ -5,7 +5,6 @@ from pyeudiw.openid4vp.authorization_request import build_authorization_request_
 from pyeudiw.satosa.interfaces.request_handler import RequestHandlerInterface
 from pyeudiw.satosa.utils.response import Response
 from pyeudiw.tools.base_logger import BaseLogger
-from pyeudiw.jwt.exceptions import JWSSigningError
 from pyeudiw.jwk.parse import parse_certificate
 from pyeudiw.jwk import JWK
 

@@ -33,6 +33,7 @@ class DirectTrustSdJwtVc(_DirectTrustJwkHandler):
             client_id=client_id,
         )
         self.metadata_endpoint = metadata_endpoint
+        self._trust_type_name = "direct_trust_sd_jwt_vc"
 
     def get_metadata(
         self, issuer: str, trust_source: TrustSourceData

@@ -28,3 +28,4 @@ class DirectTrustJar(_DirectTrustJwkHandler):
             jwks=jwks,
             client_id=client_id,
         )
+        self._trust_type_name = "direct_trust_jar"
