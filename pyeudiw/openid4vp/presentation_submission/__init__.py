@@ -108,6 +108,9 @@ class PresentationSubmissionHandler:
         :return: Tuple of position and path.
         :rtype: tuple[str, str]
         """
+        if path == "$":
+            return 0
+
         pattern = r"\$[a-z_\-\.]*\[(\d+)\]"
         match = re.match(pattern, path, re.I)
         if match:
