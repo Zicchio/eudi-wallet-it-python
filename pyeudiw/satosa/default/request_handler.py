@@ -30,10 +30,11 @@ class RequestHandler(RequestHandlerInterface, BaseLogger):
                 e400
             )
         
-        try:
-            metadata = self.trust_evaluator.get_metadata(self.client_id)
-        except Exception:
-            metadata = None
+        # try:
+        #     metadata = self.trust_evaluator.get_metadata(self.client_id)
+        # except Exception:
+        #     metadata = None
+        metadata = None
 
         data = build_authorization_request_claims(
             self.client_id,
@@ -69,7 +70,8 @@ class RequestHandler(RequestHandlerInterface, BaseLogger):
         }
 
         # load all the trust handlers request jwt header parameters, if any
-        trust_params = self.trust_evaluator.get_jwt_header_trust_parameters(issuer=self.client_id)
+        # trust_params = self.trust_evaluator.get_jwt_header_trust_parameters(issuer=self.client_id)
+        trust_params = {}
         _protected_jwt_headers.update(trust_params)
 
         metadata_key = None
